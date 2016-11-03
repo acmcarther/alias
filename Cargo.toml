@@ -1,0 +1,14 @@
+[package]
+name = "alias"
+version = "0.1.0"
+authors = ["Alex McArther <acmcarther@gmail.com>"]
+
+[workspace]
+
+[dependencies]
+clap = "2.17.0"
+hyper = {version = "0.9.11", features = ["serde"]}
+
+[dependencies.api]
+path = "./api"
+
