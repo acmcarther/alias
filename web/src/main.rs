@@ -7,6 +7,7 @@ extern crate router;
 extern crate params;
 extern crate rand;
 extern crate plugin;
+extern crate staticfile;
 
 mod database;
 mod list;

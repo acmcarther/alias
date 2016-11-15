@@ -41,7 +41,12 @@ impl SetMapping {
     let path = map.find(&["path"]);
     let url = map.find(&["url"]);
 
+    println!("provided path: {:?}", path);
+    println!("provided url: {:?}", url);
+
     match (path, url) {
+      (Some(&Value::String(ref path)), _) if path_is_invalid(path) => self.path_invalid(),
+      (Some(&Value::String(ref path)), Some(&Value::String(ref url))) if path == "" => self.generate_and_install(url),
       (Some(&Value::String(ref path)), Some(&Value::String(ref url))) => self.install(path, url),
       (Some(&Value::Null), Some(&Value::String(ref url))) => self.generate_and_install(url),
       (None, Some(&Value::String(ref url))) => self.generate_and_install(url),
@@ -50,21 +55,28 @@ impl SetMapping {
   }
 
   fn install(&self, path: &str, url: &str) -> IronResult<Response> {
-    Url::parse(url)
-      .map_err(|e| IronError::new(InvalidUrl, status::BadRequest))
-      .and_then(|url| {
+    match Url::parse(url) {
+      Err(_) => self.invalid_url(),
+      Ok(url) => {
         if self.inner.custom_config.install_mapping(path, url) {
-          self.success()
+          self.success(path)
         } else {
           self.already_exists()
         }
-      })
+      }
+    }
+  }
+
+  fn path_invalid(&self) -> IronResult<Response> {
+    Ok(Response::new()
+      .set("Path characters must be alphanumeric (or '-')")
+      .set(status::BadRequest))
   }
 
   fn generate_and_install(&self, url: &str) -> IronResult<Response> {
-    Url::parse(url)
-      .map_err(|e| IronError::new(InvalidUrl, status::BadRequest))
-      .and_then(|url| {
+    match Url::parse(url) {
+      Err(_) => self.invalid_url(),
+      Ok(url) => {
         let mut gen_url = None;
 
         while gen_url.is_none() {
@@ -83,9 +95,10 @@ impl SetMapping {
         }
 
         Ok(Response::new()
-          .set(format!("Set to '/g/{}'", gen_url.unwrap()))
+          .set(format!("Set to https://wai.fi/g/{}", gen_url.unwrap()))
           .set(status::Ok))
-      })
+      }
+    }
   }
 
   fn invalid_request(&self) -> IronResult<Response> {
@@ -94,9 +107,9 @@ impl SetMapping {
       .set(status::BadRequest))
   }
 
-  fn success(&self) -> IronResult<Response> {
+  fn success(&self, path: &str) -> IronResult<Response> {
     Ok(Response::new()
-      .set("Mapping set!")
+      .set(format!("Mapping set to https://wai.fi/c/{}", path))
       .set(status::Ok))
   }
 
@@ -105,25 +118,20 @@ impl SetMapping {
       .set("This mapping already exists (possibly as something else).")
       .set(status::Ok))
   }
+
+  fn invalid_url(&self) -> IronResult<Response> {
+    Ok(Response::new()
+      .set("Invalid URL, please remember to provide http or https (or other).")
+      .set(status::BadRequest))
+  }
+}
+
+fn path_is_invalid(path: &str) -> bool {
+  path.to_owned().chars().any(|c| !c.is_alphanumeric() && c != '-')
 }
 
 impl Handler for SetMapping {
   fn handle(&self, req: &mut Request) -> IronResult<Response> {
     self.handle_method(req)
-  }
-}
-
-#[derive(Debug)]
-pub struct InvalidUrl;
-
-impl fmt::Display for InvalidUrl {
-  fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-    f.write_str("Invalid url: Must match 'https?://url'")
-  }
-}
-
-impl Error for InvalidUrl {
-  fn description(&self) -> &str {
-    "Invalid Url"
   }
 }

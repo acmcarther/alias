@@ -6,6 +6,7 @@ use redirect::RedirectConfig;
 use redirect::Redirecter;
 use router::Router;
 use set::SetMapping;
+use staticfile::Static;
 use std::net::ToSocketAddrs;
 
 pub fn run<A: ToSocketAddrs>(client: RedisClient, addr: A) {
@@ -15,6 +16,7 @@ pub fn run<A: ToSocketAddrs>(client: RedisClient, addr: A) {
 
 pub fn make_router(client: RedisClient) -> Router {
   let mut r = Router::new();
+  r.get("/", Static::new("./assets/home.html"), "home");
   r.post("/set",
          SetMapping::new(RedirectConfig::new(client.with_suffix("/g/")),
                          RedirectConfig::new(client.with_suffix("/c/"))),

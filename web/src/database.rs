@@ -26,14 +26,14 @@ impl RedisClient {
   pub fn new() -> RedisClient {
     RedisClient {
       store: "redis://redis.service.consul".to_owned(),
-      key_prefix: "alias::test::1".to_owned(),
+      key_prefix: "alias::test::2".to_owned(),
     }
   }
 
   pub fn with_suffix(&self, suffix: &str) -> RedisClient {
     RedisClient {
       store: self.store.clone(),
-      key_prefix: format!("{}{}", self.key_prefix, suffix),
+      key_prefix: format!("{}::{}", self.key_prefix, suffix),
     }
   }
 
