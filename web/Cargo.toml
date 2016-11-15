@@ -1,5 +1,5 @@
 [package]
-name = "alias"
+name = "web"
 version = "0.1.0"
 authors = ["Alex McArther <acmcarther@gmail.com>"]
 
@@ -7,7 +7,9 @@ authors = ["Alex McArther <acmcarther@gmail.com>"]
 clap = "2.17.0"
 hyper = {version = "0.9.11", features = ["serde"]}
 redis = "0.7.0"
-
-[dependencies.api]
-path = "./api"
-
+iron = "0.4.0"
+mount = "0.2.1"
+router = "0.4.0"
+params = "0.5.0"
+rand = "0.3.14"
+plugin = "0.2.6"
