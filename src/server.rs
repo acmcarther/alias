@@ -29,6 +29,12 @@ impl<D: DatabaseClient + 'static> AliasHandler<D> {
     AliasHandler { db_client: client }
   }
 
+  pub fn list(&self, res: Response) {
+    let keys = self.db_client.list_all();
+    let str_keys = keys.into_iter().map(|k| format!("{:?}\n", k)).collect::<String>();
+    res.send(str_keys.as_bytes()).unwrap()
+  }
+
   pub fn set(&self, body: Vec<u8>, res: Response) {
     let msg = String::from_utf8(body).unwrap();
 
@@ -85,6 +91,8 @@ impl<D: DatabaseClient + 'static> Handler for AliasHandler<D> {
 
     if let RequestUri::AbsolutePath(ref path) = req.uri {
       match (&req.method, path.as_str()) {
+        (&Method::Get, "/list") => self.list(res),
+        (&Method::Post, "/list") => self.must_get(res),
         (&Method::Post, "/api/set") => self.set(body, res),
         (&Method::Get, "/api/set") => self.must_post(res),
         (&Method::Get, binding) => self.get(binding, res),

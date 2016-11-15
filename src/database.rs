@@ -6,6 +6,7 @@ use std::sync::Mutex;
 use redis::Commands;
 
 pub trait DatabaseClient: Send + Sync {
+  fn list_all(&self) -> Vec<Mapping>;
   fn set_mapping(&self, Mapping, Url) -> bool;
   fn get_mapping(&self, &Mapping) -> Option<Url>;
   fn has_mapping(&self, &Mapping) -> bool;
@@ -32,6 +33,10 @@ impl DatabaseClient for InMemoryClient {
     } else {
       false
     }
+  }
+
+  fn list_all(&self) -> Vec<Mapping> {
+    panic!("Not implemented because I'm lazy");
   }
 
   fn get_mapping(&self, m: &Mapping) -> Option<Url> {
@@ -74,6 +79,13 @@ fn map_to_string(m: &Mapping) -> String {
 }
 
 impl DatabaseClient for RedisClient {
+  fn list_all(&self) -> Vec<Mapping> {
+    let conn = ::redis::Client::open(self.store).and_then(|c| c.get_connection()).unwrap();
+
+    let keys: Vec<String> = conn.keys(format!("{}::*", self.key_prefix)).unwrap();
+    keys.into_iter().map(|k| Mapping::Custom(k)).collect()
+  }
+
   fn set_mapping(&self, m: Mapping, url: Url) -> bool {
     let conn = ::redis::Client::open(self.store).and_then(|c| c.get_connection()).unwrap();
     // SETNX -- write if key doesn't exist
