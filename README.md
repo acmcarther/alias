@@ -20,7 +20,9 @@ It is a planned small self-hosted service for aliasing urls to shortened, quick 
 - Querying existing urls
 
 ## Wheres the stuff?
-Not here yet buddy
+Theres some stuff in web/, which provides a really basic api.
+
+It currently exists as a barebones web layer on top of redis.
 
 ## Wheres the license?
 Not here yet buddy
